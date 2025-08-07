@@ -18,11 +18,10 @@ In this project, we apply the RFM model—which stands for Recency, Frequency, a
 
 ### 2.1 Dataset Summary
 
-The dataset covers transactions between Dec 1, 2010, and Dec 9, 2011, and includes:
+The [dataset](https://drive.google.com/file/d/1lP5kFSBI0iLdg-mAF27s9a8MjyR07FVT/view?usp=drive_link) covers transactions between Dec 1, 2010, and Dec 9, 2011, and includes:
 
 - ~500,000 transactions  
 - ~4,000 valid customers (after cleaning)
-[Link](https://drive.google.com/file/d/1lP5kFSBI0iLdg-mAF27s9a8MjyR07FVT/view?usp=drive_link)
 
 | Column       | Description                                           |
 |--------------|-------------------------------------------------------|
