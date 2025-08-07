@@ -43,20 +43,3 @@ Grouped retail customers based on recency, frequency, and spending to help the b
 
 ---
 
-
----
-
-## 💬 Why Me?
-
-If you're looking for a data scientist who:
-
-- Thinks like a business partner, not just a model builder
-- Can turn raw data into usable insights for product, marketing, or finance teams
-- Communicates clearly with both technical and non-technical stakeholders
-
-Then I'd love to connect.
-
----
-
-📫 [Connect on LinkedIn](https://www.linkedin.com/in/你的linkedin用户名) · ✉️ [Email Me](mailto:你的邮箱)
-
