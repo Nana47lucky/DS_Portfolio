@@ -189,6 +189,19 @@ def rfm_func(x):
     }[key]
 ```
 
+## 🎯 RFM Segments and Suggested Marketing Strategies
+
+| Segment Type                     | R   | F   | M   | Marketing Focus |
+|----------------------------------|-----|-----|-----|-----------------|
+| **High-Value Loyal Customers**   | ↑   | ↑   | ↑   | VIP programs, exclusive discounts, early access to new products. |
+| **High-Value Retention Customers** | ↓   | ↑   | ↑   | Win-back campaigns, personalized offers to re-engage. |
+| **High-Potential Customers**     | ↑   | ↓   | ↑   | Encourage repeat purchases with targeted promotions. |
+| **At-Risk High Spenders**        | ↓   | ↓   | ↑   | Special offers to prevent churn, personalized follow-up. |
+| **Value Growth Customers**       | ↑   | ↑   | ↓   | Upselling and cross-selling to increase spending. |
+| **Retention-Focused Customers**  | ↓   | ↑   | ↓   | Maintain relationship with loyalty rewards and incentives. |
+| **New or Developing Customers**  | ↑   | ↓   | ↓   | Onboarding offers, nurture campaigns to build loyalty. |
+| **Low-Value Inactive Customers** | ↓   | ↓   | ↓   | Low-cost mass marketing, reactivation campaigns. |
+
 ---
 
 ## 5. Clustering Methods
