@@ -4,19 +4,74 @@
 
 ## 1. Project Overview
 
-### 1.1 Context and Objective
+### 1.1 Business Context
 
-Customer segmentation is a foundational step in personalized marketing and data-driven customer relationship management (CRM). By classifying customers based on their transaction history, businesses can optimize resource allocation, enhance retention efforts, and maximize profitability.
+**Lucky & Me**, a children’s performance underwear brand, faces several operational challenges common in retail:
 
-In this project, we apply the RFM model—which stands for Recency, Frequency, and Monetary value—to segment customers using transaction data. We further enhance segmentation insights by applying unsupervised clustering algorithms including K-Means and DBSCAN, and visually comparing their performance.
+- **Low in-store traffic**, affecting conversion and visibility.
+- **Inventory mismatches**, such as out-of-stock and missing sizes, hurting customer experience.
+- **Online transaction obstacles**, including lack of attribution and sales tracking.
+- **Limited marketing resources**, especially for digital content and personalized outreach.
 
-> **Business Value:** Help the marketing team personalize communication, optimize resource allocation, and focus on high-value customers.
+To address these pain points, this project applies customer segmentation to enable data-driven marketing and strategic CRM improvement.
+
+
+### 1.2 Objective
+
+This project aims to segment customers using historical transaction data and design actionable marketing strategies that:
+
+- Enhance customer retention and loyalty,
+- Boost repeat purchase rates,
+- Optimize promotional resource allocation.
+
+We use:
+
+- **RFM analysis** (Recency, Frequency, Monetary value) to derive customer value features,
+- **K-Means clustering** to uncover behavioral segments,
+- **Elbow method and silhouette score** to validate cluster quality,
+- **Visual analytics** to communicate insights and drive business decisions.
+
+
+### 1.3 Strategic Value
+
+#### 💡 Why Segment Customers?
+
+Customer segmentation enables tailored strategies based on customer behavior and value:
+
+- **VIPs** → Exclusive discounts, loyalty perks, and early access.
+- **Regulars** → Rewards programs and personalized coupons.
+- **New users** → Welcome bundles and first-purchase incentives.
+- **At-risk/inactive** → Re-engagement offers and periodic check-ins.
+
+This empowers Lucky & Me to implement **tiered marketing strategies** that increase lifetime value and reduce churn.
+
+
+### 1.4 Technical Approach
+
+- **Feature Engineering**:
+  - Constructed RFM metrics from raw transaction logs.
+- **Clustering**:
+  - Created 8 RFM-based tiers.
+  - Used **K-Means** to identify 3 core customer groups.
+- **Validation**:
+  - Applied the **elbow method** and **silhouette scores**.
+- **Visualization**:
+  - RFM heatmaps, cluster plots, and customer tier dashboards.
+ 
+
+### 1.5 Tools & Technologies
+
+- **Languages**: Python (Pandas, NumPy, Sklearn, Matplotlib, Seaborn)
+- **Algorithms**: K-Means, DBSCAN
+- **Evaluation**: Silhouette Score, Elbow Plot
+- **Visualization**: Heatmaps, scatter plots, segment profiling
+- **Strategy Layer**: Lifecycle-based marketing recommendations
 
 ---
 
-## 2. Data Overview & Preprocessing
+## 2. Data Preprocessing
 
-### 2.1 Dataset Summary
+### 2.1 Dataset Overview
 
 The [dataset](https://drive.google.com/file/d/1lP5kFSBI0iLdg-mAF27s9a8MjyR07FVT/view?usp=drive_link) covers transactions between Dec 1, 2010, and Dec 9, 2011, and includes:
 
@@ -34,13 +89,37 @@ The [dataset](https://drive.google.com/file/d/1lP5kFSBI0iLdg-mAF27s9a8MjyR07FVT/
 | CustomerID   | Unique customer ID                                    |
 | Country      | Customer location                                     |
 
-### 2.2 Cleaning Steps
 
-- Removed cancellations (`InvoiceNo` starts with 'C')
-- Dropped null `CustomerID` rows
-- Filtered negative/zero quantities or prices
-- Added `TotalPrice = Quantity * UnitPrice`
-- Defined reference date as **2011-12-10** (1 day after last invoice)
+### 2.2 Missing Data Removal
+
+We first examined overall data completeness to ensure the dataset was suitable for RFM feature engineering and clustering.
+
+Using `df.info()` and a `missingno.matrix` visualization, we observed that:
+
+- Core transactional fields (`InvoiceNo`, `StockCode`, `Quantity`, `InvoiceDate`, `UnitPrice`, `Country`) showed almost no missing values.
+- `Description` had minor missingness (~1%), reflecting a small number of transactions without product names.
+- `CustomerID` exhibited substantial missingness (~25%), indicating guest/anonymous purchases or records without captured identifiers.
+
+<img width="1078" height="461" alt="image" src="https://github.com/user-attachments/assets/4a140210-e669-40d3-9086-67b218350ec9" />
+
+
+**Insight:** The dataset is largely complete for modeling. However, rows without `CustomerID` should be excluded from RFM/K-Means to avoid instability, while the anonymous segment can be analyzed separately as a **“Guest”** cohort for marketing.
+
+
+### 2.3 Missing Data Removal
+
+We then evaluated cancellations/returns and other invalid lines, which can bias Monetary values and distort downstream clustering.
+
+Using invoice patterns and basic validity checks, we observed that:
+
+- Credit notes/cancellations could be identified by `InvoiceNo` containing **“C”**, and negative quantities reflected returns rather than purchases.
+- Non-positive prices or quantities (e.g., `UnitPrice ≤ 0`, `Quantity ≤ 0`) represented corrections, freebies, or data-entry artifacts rather than revenue-bearing transactions.
+- After removing credit notes and keeping only positive quantities and prices, distribution tails shrank and summary statistics stabilized, with negligible impact on the vast majority of records.
+
+  <img width="908" height="127" alt="image" src="https://github.com/user-attachments/assets/1fb1e292-aa11-4de9-8238-e4f360ea02f9" />
+
+
+**Insight:** Filtering cancellations/returns and non-positive lines materially improves the reliability of Monetary features, reducing noise before RFM computation and K-Means clustering.
 
 ---
 
