@@ -123,7 +123,7 @@ Using invoice patterns and basic validity checks, we observed that:
 
 ---
 
-## 3. RFM Feature Engineering
+## 3. RFM Analysis
 
 ### 3.1 Building the RFM Table
 
