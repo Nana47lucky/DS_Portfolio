@@ -51,6 +51,7 @@ Each one reflects my ability to turn messy data into insights that matter.
 - Converts raw transactions into a **deployable segmentation layer** for CRM/CDP
 - Balances **explainability (8-segment RFM)** with **data-driven grouping (K-Means++)**
 - Ready for A/B tests on retention and LTV uplift per segment
+  
 🔗 [View Project](https://github.com/Nana47lucky/DS_Portfolio/blob/main/01_Customr_Segmentation_RFM_KMeans/readme.md)
 
 ---
