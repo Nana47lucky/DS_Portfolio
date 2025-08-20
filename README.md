@@ -39,7 +39,7 @@ Grouped retail customers based on recency, frequency, and spending to help the b
 - Cleaned & transformed transactional data into RFM features
 - Chose optimal K using silhouette score and elbow method
 - Visualized segments for actionable marketing plans  
-🔗 [View Project](Link)
+🔗 [View Project](https://github.com/Nana47lucky/DS_Portfolio/blob/main/01_Customr_Segmentation_RFM_KMeans/readme.md)
 
 ---
 
