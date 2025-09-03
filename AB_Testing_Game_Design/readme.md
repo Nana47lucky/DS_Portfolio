@@ -1,5 +1,8 @@
 # 🎮 A/B Testing for Game Design – Empowering User Experience & Optimizing Product Recommendations
 
+<img width="2560" height="720" alt="image" src="https://github.com/user-attachments/assets/52ebc043-99fc-44a8-bbc0-29160d3fd44d" />
+
+
 ## 📌 1. Project Overview
 
 ### 1.1 Business Context
