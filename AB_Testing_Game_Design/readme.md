@@ -14,50 +14,78 @@ To test this, an **A/B experiment** was conducted on **90,189 players**, randoml
 
 We tracked three core metrics:  
 - `sum_gamerounds`: Total game rounds played within 14 days  
-- `retention_1`: Day-1 retention  
-- `retention_7`: Day-7 retention  
+- `retention_1`: whether the user returned on Day 1  
+- `retention_7`: whether the user returned on Day 7 
 
 ---
 
 ## 📊 2. Data Source & Preprocessing
 
-- Dataset: **90,189 rows**, one record per player  
+- [Dataset](https://drive.google.com/file/d/13RZbNDqgYxkW6IBCYpe_lvUKAKaIxkF7/view?usp=sharing): **90,189 rows**, one record per player  
 - Fields:  
 
 | Column           | Description                                  |
 | ---------------- | -------------------------------------------- |
 | `userid`         | Unique player identifier                     |
-| `version`        | Experiment group (`gate_30` / `gate_40`)     |
+| `version`        | Group Assignment(`gate_30` / `gate_40`)      |
 | `sum_gamerounds` | Total rounds played in first 14 days         |
-| `retention_1`    | Returned on Day 1 (binary)                   |
-| `retention_7`    | Returned on Day 7 (binary)                   |
+| `retention_1`    | Returned on Day 1 (Boolean)                  |
+| `retention_7`    | Returned on Day 7 (Boolean)                  |
 
 **Group size balance**:  
 - `gate_30`: 44,700 players  
 - `gate_40`: 45,489 players  
 
-**Outlier handling**:  
-- Maximum game rounds = 49,854 (extreme outlier)  
-- Removed top outlier → new max = 2,961 rounds  
-- Stabilized variance without affecting median (~16–17 rounds)  
+**Outlier Handling**
 
-📈 *Distribution of `sum_gamerounds` before outlier removal:*  
-![Figure 1 – Distribution before cleaning](results/figure1_distribution_raw.png)  
+Basic descriptive statistics revealed a **highly skewed distribution** in `sum_gamerounds`.  
+- Median rounds ≈ 16–17  
+- Maximum value > **49,000**, suggesting extreme outliers  
 
-📉 *Distribution after removing outlier:*  
-![Figure 2 – Distribution after cleaning](results/figure2_distribution_clean.png)  
+Such extreme values can **distort averages** and make hypothesis testing unreliable, as a few hyperactive users disproportionately influence the mean.
+
+To mitigate this, we removed the **single maximum data point** (`sum_gamerounds = 49,854`).  
+- After removal, the new maximum = **2,961 rounds**  
+- Median and majority distribution remained unchanged  
+- Standard deviation was **stabilized**, improving downstream statistical tests  
+
+This adjustment ensures the dataset better reflects **typical player behavior** while avoiding bias from a single anomalous observation.  
+
+📈 *Before removing outliers:*  
+<img width="1074" height="212" alt="image" src="https://github.com/user-attachments/assets/fdc1d361-309c-4511-8051-17a0ac6eac54" />
+  
+
+📉 *After removing outliers:*  
+<img width="804" height="291" alt="image" src="https://github.com/user-attachments/assets/0108f29f-ed46-4549-9c92-3eb188600d46" />
+ 
+
+> **Insight:** The cleaned dataset better reflects real-world player engagement patterns and avoids drawing misleading conclusions from rare but extreme cases.
+ 
 
 ---
 
 ## 🔍 3. Exploratory Data Analysis (EDA)
 
-### 3.1 Game Rounds
-- Both groups showed **right-skewed distributions**  
-- Median rounds: ~17 (`gate_30`) vs ~16 (`gate_40`)  
-- No major change in gameplay engagement observed  
+### 3.1 Game Rounds (Engagement Metric)
 
-📊 *Boxplot & Histogram of game rounds by group:*  
-![Figure 3 – Game rounds comparison](results/figure3_gamerounds_boxplot.png)  
+We first analyzed whether postponing the first gate affected how much users played during the first 14 days. The analysis combined both **descriptive statistics** and **visual inspection**.
+
+Key findings from the distributions:  
+- **Central tendency:** Median values were nearly identical – ~17 rounds for `gate_30` vs ~16 rounds for `gate_40`.  
+- **Distributional shape:** Both groups displayed **right-skewed patterns**, indicating that most players engaged moderately, while a small subset played excessively more.  
+- **Tail behavior:** Even after outlier removal, the **long tails persisted**, confirming that heavy players exist in both groups but are not systematically biased toward one version.  
+- **Overall impression:** No meaningful difference in engagement emerged between the two versions.  
+
+📈 *Game round distributions (full scale):*  
+<img width="1081" height="178" alt="image" src="https://github.com/user-attachments/assets/20a32375-1390-40a9-afbf-b2f366bf0052" />
+
+
+🔍 *Zoomed-in distribution (top 200 rounds):*  
+<img width="1072" height="181" alt="image" src="https://github.com/user-attachments/assets/dde23ed3-91d4-4900-b541-e04ba46b2e05" />
+
+
+> **Insight:** Despite shifting the first gate, both groups exhibited **very similar playtime patterns**. The change neither increased nor decreased overall engagement, suggesting that gate placement primarily influences **retention** rather than **short-term play volume**.
+
 
 ---
 
@@ -71,30 +99,17 @@ We tracked three core metrics:
 | gate_40 | 45,489 | 0.4423          | 0.1820          | 2,333,530         |
 
 📊 *Day-1 & Day-7 retention rate comparison:*  
-![Figure 4 – Retention comparison](results/figure4_retention_barchart.png)  
+<img width="1067" height="406" alt="image" src="https://github.com/user-attachments/assets/d9220c88-0563-4b5b-9e6c-15d2266abc94" />
+ 
 
 > **Insight:** The gate shift did **not boost engagement**, but **negatively impacted 7-day retention**.
 
 ---
 
-## 🧪 4. Experiment Design & Validation
 
-### 4.1 Randomization Check (AA Test)
+## 📐 4. Hypothesis Testing
 
-| Metric           | Test           | p-value | Conclusion          |
-| ---------------- | -------------- | ------- | ------------------- |
-| `sum_gamerounds` | Welch’s t-test | 0.949   | ✅ Balanced         |
-| `retention_1`    | Chi-square     | 0.075   | ✅ Balanced         |
-| `retention_7`    | Chi-square     | 0.064   | ✅ Balanced         |
-
-📊 *ECDF of total game rounds:*  
-![Figure 5 – ECDF comparison](results/figure5_ecdf.png)  
-
----
-
-## 📐 5. Hypothesis Testing
-
-### 5.1 Engagement (Game Rounds)
+### 4.1 Game Rounds Played (Numerical Metric)
 - Distribution highly non-normal → used **Mann-Whitney U test**  
 - Result: **p = 0.0509** → ❌ not significant  
 
