@@ -2,6 +2,8 @@
 
 ## 📌 1. Project Overview
 
+### 1.1 Business Context
+
 In the mobile puzzle game **Cookie Cats**, progression gates are introduced to pace gameplay and encourage in-app purchases. This project evaluates the **impact of shifting the first progression gate from level 30 to level 40** on player engagement and retention.  
 
 The **business hypothesis**:  
@@ -16,6 +18,27 @@ We tracked three core metrics:
 - `sum_gamerounds`: Total game rounds played within 14 days  
 - `retention_1`: whether the user returned on Day 1  
 - `retention_7`: whether the user returned on Day 7 
+
+---
+
+### 1.2 Statistical Approach (high level)
+- **Randomization checks (AA-style):** Welch’s t (engagement), χ² (retention).
+- **Method selection:**  
+  - Normality (Shapiro–Wilk) → **fail** → non-parametric for engagement.  
+  - Variance (Levene) assessed when relevant.  
+  - **Engagement:** Mann–Whitney U (median shift, distribution-free).  
+  - **Retention:** Two-proportion **z-tests** (binomial model).
+- **Uncertainty:** **Bootstrapping (5,000 resamples)** for CI and **directional probability**.
+- **Implementation:** reusable `AB_Test()` decision function + figure helpers.
+
+> The goal is to be **assumption-aware** (select the right test for the data) and **decision-oriented** (CI and probability of harm, not just p-values).
+
+---
+
+### 1.3 Strategic Value
+- Use A/B testing not only to **find wins** but to **avoid harmful changes**.  
+- Make gate policy decisions with a **clear KPI hierarchy** and **guardrails**.  
+- Produce artifacts (code + visuals) that can be **reused** for future design experiments.
 
 ---
 
@@ -109,67 +132,130 @@ Key findings from the distributions:
 
 ## 📐 4. Hypothesis Testing
 
-### 4.1 Game Rounds Played (Numerical Metric)
-- Distribution highly non-normal → used **Mann-Whitney U test**  
-- Result: **p = 0.0509** → ❌ not significant  
+### 4.0 Decision Flow (Method Selection)
+We used a **data-adaptive** testing strategy:
 
-### 5.2 Retention (Proportion Tests)
+<img width="606" height="488" alt="hypothesis_test_flowchart" src="https://github.com/user-attachments/assets/2e82b537-cd30-4e60-8272-15693b9a0213" />
 
-| Metric        | gate_30 | gate_40 | p-value | Conclusion           |
-| ------------- | ------- | ------- | ------- | -------------------- |
-| Day-1 Ret.    | 44.8%   | 44.2%   | 0.0739  | ❌ No difference      |
-| Day-7 Ret.    | 19.0%   | 18.2%   | 0.0016  | ✅ Significant drop   |
+
+1) **Normality (Shapiro–Wilk)** → both groups **fail** normality  
+2) **Homogeneity (Levene)** → **satisfied**  
+3) **Choice** → **Mann–Whitney U** for `sum_gamerounds`; **two-proportion z-tests** for retention
+
+> **(Notebook detail)** `AB_Test()` also computes **Cohen’s d** (pooled) and **observed power** for parametric branches, and auto-plots group distributions.
+
 
 ---
 
-## 🎲 6. Bootstrapping Validation
+### 4.1 Engagement — `sum_gamerounds` (Numerical Metric)
 
-- Resampled **5000 iterations** with replacement  
-- Calculated Day-1 & Day-7 retention differences  
+- Distribution is **non-normal & heavily skewed** → **Mann–Whitney U**
+- **p = 0.0509** → ❌ **not significant** (α = 0.05)
+- Descriptives: mean 51.34 vs 51.30; pooled **Cohen’s d ≈ 0.0004** (negligible)
 
-| Metric        | 95% CI          | Excludes 0? | Conclusion               |
-| ------------- | --------------- | ----------- | ------------------------ |
-| Day-1 Ret.    | [-0.0123, 0.0005] | ❌ No       | Not significant          |
-| Day-7 Ret.    | [-0.0134, -0.0032] | ✅ Yes      | Significant negative     |
+> **Interpretation.** The gate delay **does not** impact total play volume.
 
-**Probabilities:**  
+---
+
+### 4.2 Retention Rates (Binary Metrics)
+
+Two-proportion **z-tests**:
+
+| Metric         | gate_30 | gate_40 | Δ (B–A) | p-value | Conclusion |
+|----------------|--------:|--------:|--------:|--------:|-----------|
+| **Day-1**      | 0.4482  | 0.4423  | –0.0059 | 0.0739  | ❌ Not significant |
+| **Day-7**      | 0.1902  | 0.1820  | –0.0082 | 0.0016  | ✅ Significant drop |
+
+> **Interpretation.** Short-term retention stays flat; **long-term retention deteriorates** under `gate_40`.
+
+---
+
+## 🎲 5. Bootstrapping
+
+### 5.1 Why bootstrap?
+P-values don’t show **effect magnitude** or **uncertainty spread**. We therefore **resample with replacement** to obtain empirical **CIs** and **directional probabilities**.
+
+### 5.2 Setup
+- Iterations: **5,000** (notebook包含 500 与 5,000 两版，最终取 5,000)  
+- For each resample, compute retention rates by group and **Δ = gate_40 – gate_30**  
+- Plot distributions and mark **95% CIs**
+
+**Bootstrap histograms (Δ)**  
+<img width="806" height="347" alt="image" src="https://github.com/user-attachments/assets/e4b86d87-0540-4226-acbe-cb965a97a440" />
+
+
+### 5.3 Results
+| Metric       | 95% CI              | Excludes 0? | Conclusion                  |
+|--------------|---------------------|-------------|-----------------------------|
+| Day-1        | **[-0.0123, 0.0005]** | ❌ No        | Not significant             |
+| Day-7        | **[-0.0134, -0.0032]** | ✅ Yes       | Significant negative effect |
+
+**Directional probabilities**  
 - P(Day-1 diff < 0) = 96.6%  
 - P(Day-7 diff < 0) = 99.98%  
 
 📈 *Bootstrap distribution of Day-1 and Day-7 differences:*  
-![Figure 6 – Bootstrap CI](results/figure6_bootstrap.png)  
+<img width="1051" height="444" alt="image" src="https://github.com/user-attachments/assets/999dc86b-f18f-42fe-b453-e316332083cb" />
+
+> **Takeaway.** Near-certainty that `gate_40` is **worse** for Day-7 retention.
 
 ---
 
-## 📌 7. Key Findings & Business Impact
+## 🧠 6. Insights & Recommendation
 
-### 7.1 Findings
-- 🚫 No improvement in game rounds (engagement)  
-- 🚫 No difference in Day-1 retention  
-- ⚠️ **Significant 5% relative drop in Day-7 retention** (~0.8pp decrease)  
-- Bootstrap confirmed robustness of results  
+### 6.1 Key Findings (What the data says)
 
-### 7.2 Business Impact
-- Gate shift **reduced long-term retention** → higher churn risk  
-- Prevented a harmful design rollout that could have cost **retained players & revenue**  
-- Demonstrated value of A/B testing for **risk mitigation** as well as optimization  
+- **Engagement didn’t move.** Shifting the first gate **30 → 40** did **not** change total play volume in the first 14 days (`sum_gamerounds`).
+- **Short-term retention unchanged.** Day-1 retention shows a small, non-significant dip (–0.59 pp; **p = 0.0739**).
+- **Long-term retention worsened.** Day-7 retention **drops ~0.82 percentage points** (19.02% → 18.20%), roughly **–4.3% relative**, and is **statistically significant**:
 
-**Recommendation:**  
-> ❌ **Do not roll out gate_40.** Maintain gate at level 30.
+> **Bottom line:** The gate delay does **not** improve engagement and **hurts Day-7 stickiness** with high statistical confidence.
 
 ---
 
-## ⚙️ 8. Project Workflow
+### 6.2 Practical Significance (Scale to Business)
 
-1. **Data loading & cleaning** (remove outlier)  
-2. **EDA** (visualizations, summary stats)  
-3. **Randomization check (AA test)**  
-4. **Hypothesis testing** (t-test, chi-square, z-test, Mann-Whitney)  
-5. **Bootstrapping** (confidence intervals & probability estimates)  
-6. **Interpretation & recommendation**  
+Let `Δ7 = –0.0082` (–0.82 pp). Expected retained-user impact by monthly new installs:
+
+| New installs / month | Baseline Day-7 @ 19.02% | With gate_40 @ 18.20% | **Δ retained users** |
+|---:|---:|---:|---:|
+| 100,000 | 19,020 | 18,200 | **–820** |
+| 500,000 | 95,100 | 91,000 | **–4,100** |
+| 1,000,000 | 190,200 | 182,000 | **–8,200** |
+
+Uncertainty from bootstrap 95% CI:
+- Best case (–0.32 pp): **–3,200** / 1M installs
+- Worst case (–1.34 pp): **–13,400** / 1M installs
+
+> **Revenue lens (plug-in):** `Loss ≈ NewInstalls × (–Δ7) × LTV_per_D7`.  
+> Example: if incremental LTV per Day-7 retained user = \$2, loss at 1M installs ≈ \$6.4k–\$26.8k/month.
 
 ---
 
-## 📂 9. Repository Structure
+### 6.3 Decision Rationale (Why we won’t ship gate_40)
 
+1) **No upside** on engagement  
+2) **Clear downside** on Day-7 retention (statistical & practical)  
+3) **Risk-adjusted** view from bootstrap keeps the likely effect **≤ 0**
+
+**✅ Recommendation:** **Do _not_ roll out `gate_40`.** Keep the first gate at level 30.
+
+---
+
+### 6.4 What to Try Next (Actionable roadmap)
+
+- **A/B/n:** test **level 25/30/35/40** to find optimum  
+- **Soft-gating:** one-time pass/reward at level 30 to reduce perceived friction  
+- **Personalized gating:** gate position based on early-day engagement  
+- **UX experiments:** copy/prompts/reward strength to reduce drop-off  
+- **Heterogeneity:** slice by region/device/cohort/payer vs. non-payer
+
+---
+
+### 6.5 Rollout & Monitoring Plan (if reconsidered later)
+
+1. **Canary** 1–5% traffic for 2 weeks  
+2. **Promotion criteria:** Day-7 Δ ≥ 0 and guardrails neutral  
+3. **Post-ship monitoring:** rolling-window CUSUM/SPRT on retention & crash rate  
+4. **Automatic rollback:** trigger on any guardrail violation
 
